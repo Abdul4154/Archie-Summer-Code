@@ -176,18 +176,33 @@ void opcontrol() {
 	rightBack = right;
 
 	//Lift
-	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
-		while(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
-			pros::delay(1);
-		}
-			liftToggle = !liftToggle;
-	}
-	if(liftToggle){
-		moveLiftUp(3000);
-	}
-	else{
-		moveLiftDown(0);
-	}
+
+	//if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+	//	while(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+	//		pros::delay(1);
+	//	}
+	//		liftToggle = !liftToggle;
+//	}
+	//if(liftToggle){
+	//	moveLiftUp(3000);
+	//}
+//	else{
+	//	moveLiftDown(0);
+//	}
+
+int liftPower;
+lift1 = liftPower;
+lift2 = liftPower;
+
+if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+	liftPower = 127;
+}
+else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
+	liftPower = -127;
+}
+else{
+	liftPower = 0;
+}
 
 	//Intake
 
