@@ -11,6 +11,7 @@ pros::Motor lift2(5, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNT
 pros::Motor intakeLeft(3, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor intakeRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 
+
 //CONTROLLER
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 /**
@@ -19,6 +20,67 @@ pros::Motor intakeRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODE
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
+
+ 	//Lift
+	//Adjust target values in opcontrol for your target
+
+ 	int liftPower[] = {0, -80, 80, 127};
+	bool liftToggle = false;
+	int liftAvg;
+	int p;
+	float kP = .6;
+	int power = 0;
+
+	void liftUp(int target){
+		p = target - liftAvg;
+		if(liftAvg >= target){
+			power = liftPower[0];
+			lift1.tare_position();
+			lift2.tare_position();
+		}
+		else if(liftAvg < (target * .7)){
+			power = liftPower[3];
+		}
+		else if(liftAvg < target){
+			power = liftPower[3] * (p * kP);
+		}
+	}
+	void liftDown(int target){
+		p = target - liftAvg;
+		if(liftAvg >= target){
+			power = liftPower[0];
+			lift1.tare_position();
+			lift2.tare_position();
+		}
+		else if(liftAvg < (target * .7)){
+			power = liftPower[1];
+		}
+		else if(liftAvg < target){
+			power = liftPower[1] * (p * kP);
+		}
+	}
+
+	void moveLiftUp(int target){
+		if(liftAvg < target){
+			lift1 = 127;
+			lift2 = 127;
+		}
+		else{
+			lift1 = 0;
+			lift2 = 0;
+		}
+	}
+
+	void moveLiftDown(int target){
+		if(liftAvg > target){
+			lift1 = -127;
+			lift2 = -127;
+		}
+		else{
+			lift1 = 0;
+			lift2 = 0;
+		}
+	}
 void on_center_button() {
 	static bool pressed = false;
 	pressed = !pressed;
@@ -91,8 +153,14 @@ void opcontrol() {
 	rightFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	leftBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	rightBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	intakeLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	intakeRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	lift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	lift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
 
 	while (true) {
+		liftAvg = (fabs(lift1.get_position()) + fabs(lift2.get_position())/2);
 	pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 									 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 									 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
@@ -106,5 +174,35 @@ void opcontrol() {
 	leftBack = left;
 	rightFront = right;
 	rightBack = right;
-}
+
+	//Lift
+	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+		while(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+			pros::delay(1);
+		}
+			liftToggle = !liftToggle;
+	}
+	if(liftToggle){
+		moveLiftUp(3000);
+	}
+	else{
+		moveLiftDown(0);
+	}
+
+	//Intake
+
+	int intakePower;
+	intakeLeft = intakePower;
+	intakeRight = intakePower;
+
+	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+		intakePower = 127;
+	}
+	else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+		intakePower = -127;
+	}
+	else{
+		intakePower = 0;
+	}
+	}
 }
